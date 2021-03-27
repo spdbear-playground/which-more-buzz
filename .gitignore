@@ -3,3 +3,5 @@
 site-packages
 src
 .DS_Store
+node_modules
+config.ts
