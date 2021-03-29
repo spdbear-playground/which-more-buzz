@@ -24,7 +24,7 @@ const usedIndexList: [Tweet, Tweet][] = []
 
 console.log(buzzedList,nobuzzList)
 
-client.on('message', (msg) => {
+client.on('message', async (msg) => {
   if (msg.content === '!quiz' && botState === 'NOT_QUESTION') {
     const buzzedTweet = buzzedList[Math.floor(buzzedList.length * Math.random())]
     const nobuzzTweet = nobuzzList[Math.floor(nobuzzList.length * Math.random())]
@@ -33,9 +33,11 @@ client.on('message', (msg) => {
     // console.log(seed)
     usedIndexList.push([buzzedTweet, nobuzzTweet])
     
-    msg.channel.send(
+    const sentMessage = await msg.channel.send(
       `どっちがバズった？\n${tweetTuple[0].image}\n${tweetTuple[1].image}`
     )
+    await sentMessage.react('👆')
+    await sentMessage.react('👇')
     botState = 'QUESTIONING'
   }
   if (msg.content === '!answer' && botState === 'QUESTIONING') {
