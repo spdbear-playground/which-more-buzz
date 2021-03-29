@@ -20,6 +20,7 @@ type Tweet = {
 let tweetTuple: [Tweet, Tweet]
 const buzzedList = tweets.filter((v) => v.type === 'buzz')
 const nobuzzList = tweets.filter((v) => v.type === 'nobuzz')
+const usedIndexList: [Tweet, Tweet][] = []
 
 console.log(buzzedList,nobuzzList)
 
@@ -29,14 +30,18 @@ client.on('message', (msg) => {
     const nobuzzTweet = nobuzzList[Math.floor(nobuzzList.length * Math.random())]
     const seed = Math.floor((Math.random() * 100)) % 2
     tweetTuple = seed < 1 ? [buzzedTweet, nobuzzTweet] : [nobuzzTweet, buzzedTweet]
-    console.log(seed)
-    msg.reply(
+    // console.log(seed)
+    usedIndexList.push([buzzedTweet, nobuzzTweet])
+    
+    msg.channel.send(
       `どっちがバズった？\n${tweetTuple[0].image}\n${tweetTuple[1].image}`
     )
     botState = 'QUESTIONING'
   }
   if (msg.content === '!answer' && botState === 'QUESTIONING') {
-    msg.reply(`結果発表！\n${tweetTuple[0].answer}\n${tweetTuple[1].answer}`)
+    msg.channel.send(
+      `結果発表！\n${tweetTuple[0].answer}\n${tweetTuple[1].answer}`
+    )
     botState = 'NOT_QUESTION'
   }
 })
