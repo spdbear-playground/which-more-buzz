@@ -40,7 +40,7 @@ const tweetList: Tweet[] = shuffle(tweets)
 client.on('message', async (msg) => {
   if (msg.content === '!ans' && botState === 'QUESTIONING') {
     const embedA = new Discord.MessageEmbed()
-      .setColor('#ff3300')
+      .setColor('#dd2e44')
       .setTitle('🅰️')
       .setURL(tweetTuple[0].url)
       .setImage(tweetTuple[0].image)
@@ -49,9 +49,13 @@ client.on('message', async (msg) => {
         { name: 'Retweets', value: tweetTuple[0].retweets, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[0].date} ${tweetTuple[0].time}`))
+      .setFooter(
+        'Twitter',
+        'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
+      )
       .setDescription(tweetTuple[0].url)
     const embedB = new Discord.MessageEmbed()
-      .setColor('#0033ff')
+      .setColor('#3b88c3')
       .setTitle('🇧')
       .setURL(tweetTuple[1].url)
       .setImage(tweetTuple[1].image)
@@ -60,9 +64,16 @@ client.on('message', async (msg) => {
         { name: 'Retweets', value: tweetTuple[1].retweets, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[1].date} ${tweetTuple[1].time}`))
+      .setFooter(+
+        'Twitter',
+        'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
+      )
       .setDescription(tweetTuple[1].url)
+    const answer = tweetTuple[0].likes > tweetTuple[1].likes ? '🅰️' : '🇧'
+    console.log(tweetTuple[0].likes, tweetTuple[1].likes, answer)
     msg.channel.send(embedA)
     msg.channel.send(embedB)
+    msg.channel.send(`結果発表！\n正解は……${answer}でした！`)
     botState = 'NOT_QUESTION'
   }
 
@@ -78,14 +89,15 @@ client.on('message', async (msg) => {
       )
       .pop()
     if (!nobuzzTweet) return
+    botState = 'QUESTIONING'
     tweetTuple = shuffleTuple([buzzedTweet, nobuzzTweet])
-
     const sentMessage = await msg.channel.send(
-      `どっちがバズった？\n:a: ${tweetTuple[0].image}\n:regional_indicator_b: ${tweetTuple[1].image}`
+      `どっちがバズった？ ${buzzedTweet.url.replace(/status\/.+/g, '')}\n🅰️ ${
+        tweetTuple[0].image
+      }\n🇧 ${tweetTuple[1].image}`
     )
     await sentMessage.react('🅰️')
     await sentMessage.react('🇧')
-    botState = 'QUESTIONING'
   }
   if (msg.content === '!answer' && botState === 'QUESTIONING') {
     msg.channel.send(`結果発表！\n${tweetTuple[0].url}\n${tweetTuple[1].url}`)
