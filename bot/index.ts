@@ -38,29 +38,32 @@ const shuffle = ([...array]) => {
 const tweetList: Tweet[] = shuffle(tweets)
 
 client.on('message', async (msg) => {
-  if (msg.content === '!t') {
-    const embed = new Discord.MessageEmbed()
-      .setColor('#0099ff')
-      .setTitle('Some title')
-      .setURL('https://discord.js.org/')
-      .setAuthor(
-        'Some name',
-        'https://i.imgur.com/wSTFkRM.png',
-        'https://discord.js.org'
-      )
-      .setDescription('Some description here')
-      .setThumbnail('https://i.imgur.com/wSTFkRM.png')
+  if (msg.content === '!ans' && botState === 'QUESTIONING') {
+    const embedA = new Discord.MessageEmbed()
+      .setColor('#ff3300')
+      .setTitle('🅰️')
+      .setURL(tweetTuple[0].url)
+      .setImage(tweetTuple[0].image)
       .addFields(
-        { name: 'Regular field title', value: 'Some value here' },
-        { name: '\u200B', value: '\u200B' },
-        { name: 'Inline field title', value: 'Some value here', inline: true },
-        { name: 'Inline field title', value: 'Some value here', inline: true }
+        { name: 'Likes', value: tweetTuple[0].likes, inline: true },
+        { name: 'Retweets', value: tweetTuple[0].retweets, inline: true }
       )
-      .addField('Inline field title', 'Some value here', true)
-      .setImage('https://i.imgur.com/wSTFkRM.png')
-      .setTimestamp()
-      .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png')
-    msg.channel.send(embed)
+      .setTimestamp(new Date(`${tweetTuple[0].date} ${tweetTuple[0].time}`))
+      .setDescription(tweetTuple[0].url)
+    const embedB = new Discord.MessageEmbed()
+      .setColor('#0033ff')
+      .setTitle('🇧')
+      .setURL(tweetTuple[1].url)
+      .setImage(tweetTuple[1].image)
+      .addFields(
+        { name: 'Likes', value: tweetTuple[1].likes, inline: true },
+        { name: 'Retweets', value: tweetTuple[1].retweets, inline: true }
+      )
+      .setTimestamp(new Date(`${tweetTuple[1].date} ${tweetTuple[1].time}`))
+      .setDescription(tweetTuple[1].url)
+    msg.channel.send(embedA)
+    msg.channel.send(embedB)
+    botState = 'NOT_QUESTION'
   }
 
   if (msg.content === '!quiz' && botState === 'NOT_QUESTION') {
@@ -70,7 +73,8 @@ client.on('message', async (msg) => {
       .filter(
         (v) =>
           v.likes <= buzzedTweet.likes / 2 &&
-          v.retweets <= buzzedTweet.retweets / 2
+          v.retweets <= buzzedTweet.retweets / 2 &&
+          v.retweets >= 50
       )
       .pop()
     if (!nobuzzTweet) return
