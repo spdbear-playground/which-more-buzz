@@ -1,3 +1,10 @@
+export const user = {
+  userName: '中華業者商品画像bot（活動停止済） (@Rhkya)',
+  iconUrl: 'https://pbs.twimg.com/profile_images/1187720661151518720/w9fxDcTQ_normal.png',
+  bio: 'Amazon.co.jp に実際にあるおかしな商品画像を1日3回ツイートしていました。',
+  tweets: 4830,
+  followers: 56344,
+}
 export const tweets = [
   {
     date: '2020-12-11',

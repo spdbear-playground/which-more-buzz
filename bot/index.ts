@@ -1,7 +1,7 @@
 import Discord from 'discord.js'
 import { Client } from 'discord.js'
 import { config } from './config'
-import { tweets } from './data'
+import { tweets, user } from './data'
 
 const client = new Client()
 
@@ -36,12 +36,15 @@ const shuffle = ([...array]) => {
 }
 
 const tweetList: Tweet[] = shuffle(tweets)
+// TODO: A, Bそれぞれに投票したユーザーをリストに入れる
+const votedUserList: any[] = []
+console.log(votedUserList)
 
 client.on('message', async (msg) => {
   if (msg.content === '!a' && botState === 'QUESTIONING') {
     const embedA = new Discord.MessageEmbed()
       .setColor('#dd2e44')
-      .setTitle('🅰️')
+      .setTitle(user.userName)
       .setURL(tweetTuple[0].url)
       .setImage(tweetTuple[0].image)
       .addFields(
@@ -49,14 +52,11 @@ client.on('message', async (msg) => {
         { name: 'Likes', value: tweetTuple[0].likes, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[0].date} ${tweetTuple[0].time}`))
-      .setFooter(
-        'Twitter',
-        'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
-      )
+      .setFooter('Twitter', user.iconUrl)
       .setDescription(tweetTuple[0].url)
     const embedB = new Discord.MessageEmbed()
       .setColor('#3b88c3')
-      .setTitle('🇧')
+      .setTitle(user.userName)
       .setURL(tweetTuple[1].url)
       .setImage(tweetTuple[1].image)
       .addFields(
@@ -64,13 +64,9 @@ client.on('message', async (msg) => {
         { name: 'Likes', value: tweetTuple[1].likes, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[1].date} ${tweetTuple[1].time}`))
-      .setFooter(
-        +'Twitter',
-        'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
-      )
+      .setFooter('Twitter', user.iconUrl)
       .setDescription(tweetTuple[1].url)
     const answer = tweetTuple[0].likes > tweetTuple[1].likes ? '🅰️' : '🇧'
-    console.log(tweetTuple[0].likes, tweetTuple[1].likes, answer)
     msg.channel.send(embedA)
     msg.channel.send(embedB)
     msg.channel.send(`結果発表！\n正解は……${answer}でした！`)
@@ -78,7 +74,9 @@ client.on('message', async (msg) => {
   }
 
   if (msg.content === '!q' && botState === 'NOT_QUESTION') {
-    const buzzedTweet = tweetList.filter((v) => v.retweets >= 200).pop()
+    const buzzedTweet = tweetList
+      .filter((v) => v.retweets >= 300 && v.retweets < 10000)
+      .pop()
     if (!buzzedTweet) return
     tweetList.splice(
       tweetList.findIndex((v) => v.url === buzzedTweet.url),
@@ -100,11 +98,7 @@ client.on('message', async (msg) => {
     botState = 'QUESTIONING'
     tweetTuple = shuffleTuple([buzzedTweet, nobuzzTweet])
     const sentMessage = await msg.channel.send(
-      `どっちがバズった？ ${buzzedTweet.url.replace(/status\/.+/g, '')}\n🅰️: ${
-        tweetTuple[0].image
-      }\n🇧: ${tweetTuple[1].image}\nバズった方のRT数: ${
-        buzzedTweet.retweets
-      }\nそうでない方のRT数: ${nobuzzTweet.retweets}`
+      `どっちがバズった？\n🅰️: ${tweetTuple[0].image}\n🇧: ${tweetTuple[1].image}\nバズった方のRT数: ${buzzedTweet.retweets}\nそうでない方のRT数: ${nobuzzTweet.retweets}`
     )
     await sentMessage.react('🅰️')
     await sentMessage.react('🇧')
