@@ -38,7 +38,7 @@ const shuffle = ([...array]) => {
 const tweetList: Tweet[] = shuffle(tweets)
 
 client.on('message', async (msg) => {
-  if (msg.content === '!ans' && botState === 'QUESTIONING') {
+  if (msg.content === '!a' && botState === 'QUESTIONING') {
     const embedA = new Discord.MessageEmbed()
       .setColor('#dd2e44')
       .setTitle('🅰️')
@@ -77,7 +77,7 @@ client.on('message', async (msg) => {
     botState = 'NOT_QUESTION'
   }
 
-  if (msg.content === '!quiz' && botState === 'NOT_QUESTION') {
+  if (msg.content === '!q' && botState === 'NOT_QUESTION') {
     const buzzedTweet = tweetList.filter((v) => v.retweets >= 500).pop()
     if (!buzzedTweet) return
     const nobuzzTweet = tweetList
@@ -98,10 +98,6 @@ client.on('message', async (msg) => {
     )
     await sentMessage.react('🅰️')
     await sentMessage.react('🇧')
-  }
-  if (msg.content === '!answer' && botState === 'QUESTIONING') {
-    msg.channel.send(`結果発表！\n${tweetTuple[0].url}\n${tweetTuple[1].url}`)
-    botState = 'NOT_QUESTION'
   }
 })
 
