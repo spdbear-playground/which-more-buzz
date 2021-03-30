@@ -45,8 +45,8 @@ client.on('message', async (msg) => {
       .setURL(tweetTuple[0].url)
       .setImage(tweetTuple[0].image)
       .addFields(
-        { name: 'Likes', value: tweetTuple[0].likes, inline: true },
-        { name: 'Retweets', value: tweetTuple[0].retweets, inline: true }
+        { name: 'Retweets', value: tweetTuple[0].retweets, inline: true },
+        { name: 'Likes', value: tweetTuple[0].likes, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[0].date} ${tweetTuple[0].time}`))
       .setFooter(
@@ -60,12 +60,12 @@ client.on('message', async (msg) => {
       .setURL(tweetTuple[1].url)
       .setImage(tweetTuple[1].image)
       .addFields(
-        { name: 'Likes', value: tweetTuple[1].likes, inline: true },
-        { name: 'Retweets', value: tweetTuple[1].retweets, inline: true }
+        { name: 'Retweets', value: tweetTuple[1].retweets, inline: true },
+        { name: 'Likes', value: tweetTuple[1].likes, inline: true }
       )
       .setTimestamp(new Date(`${tweetTuple[1].date} ${tweetTuple[1].time}`))
-      .setFooter(+
-        'Twitter',
+      .setFooter(
+        +'Twitter',
         'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
       )
       .setDescription(tweetTuple[1].url)
@@ -78,8 +78,12 @@ client.on('message', async (msg) => {
   }
 
   if (msg.content === '!q' && botState === 'NOT_QUESTION') {
-    const buzzedTweet = tweetList.filter((v) => v.retweets >= 500).pop()
+    const buzzedTweet = tweetList.filter((v) => v.retweets >= 200).pop()
     if (!buzzedTweet) return
+    tweetList.splice(
+      tweetList.findIndex((v) => v.url === buzzedTweet.url),
+      1
+    )
     const nobuzzTweet = tweetList
       .filter(
         (v) =>
@@ -89,12 +93,18 @@ client.on('message', async (msg) => {
       )
       .pop()
     if (!nobuzzTweet) return
+    tweetList.splice(
+      tweetList.findIndex((v) => v.url === nobuzzTweet.url),
+      1
+    )
     botState = 'QUESTIONING'
     tweetTuple = shuffleTuple([buzzedTweet, nobuzzTweet])
     const sentMessage = await msg.channel.send(
-      `どっちがバズった？ ${buzzedTweet.url.replace(/status\/.+/g, '')}\n🅰️ ${
+      `どっちがバズった？ ${buzzedTweet.url.replace(/status\/.+/g, '')}\n🅰️: ${
         tweetTuple[0].image
-      }\n🇧 ${tweetTuple[1].image}`
+      }\n🇧: ${tweetTuple[1].image}\nバズった方のRT数: ${
+        buzzedTweet.retweets
+      }\nそうでない方のRT数: ${nobuzzTweet.retweets}`
     )
     await sentMessage.react('🅰️')
     await sentMessage.react('🇧')
