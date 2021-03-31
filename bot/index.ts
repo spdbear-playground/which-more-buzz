@@ -20,8 +20,11 @@ type Tweet = {
   image: string
 }
 
-const userStats: {user: string, correctRate: number}[] = []
-console.log(userStats)
+const userStatsMap: Map<
+  string,
+  { answers: number; corrects: number }
+> = new Map()
+console.log(userStatsMap)
 
 let tweetTuple: [Tweet, Tweet]
 
@@ -41,6 +44,7 @@ const shuffle = ([...array]) => {
 const tweetList: Tweet[] = shuffle(tweets)
 type Vote = {
   url: string
+  index: number
   user: string
 }
 const voteList: Vote[] = []
@@ -55,7 +59,7 @@ client.on('messageReactionAdd', (reaction, user) => {
   if (index === undefined) return
   const reactUser = user.username
   if (reactUser === 'which-more-buzz' || reactUser === null) return
-  const vote = { url: tweetTuple[index].url, user: reactUser }
+  const vote = { url: tweetTuple[index].url, user: reactUser, index }
   voteList.push(vote)
 })
 
@@ -76,6 +80,13 @@ client.on('messageReactionRemove', (reaction, user) => {
 })
 
 client.on('message', async (msg) => {
+  if (msg.content === '!l') {
+    const userStatsList = Array.from(userStatsMap.entries()).map(
+      (v) => `${v[0]}, ${v[1].answers} / ${v[1].corrects}`
+    )
+    msg.channel.send(userStatsList.join('\n'))
+
+  }
   if (msg.content === '!a' && botState === 'QUESTIONING') {
     const voteAUsers = voteList
       .filter((v) => v.url === tweetTuple[0].url)
@@ -112,8 +123,60 @@ client.on('message', async (msg) => {
     const answer = tweetTuple[0].likes > tweetTuple[1].likes ? '🅰️' : '🇧'
     msg.channel.send(embedA)
     msg.channel.send(embedB)
-    msg.channel.send(`結果発表！\n正解は……${answer}でした！`)
+    msg.channel.send(`結果発表！\nバズった方は……${answer}でした！`)
+    if (answer === '🅰️') {
+      const correctUserList = voteList.filter((v) => v.index === 0)
+      const wrongUserList = voteList.filter((v) => v.index === 1)
+      correctUserList.forEach((v) => {
+        const rate = userStatsMap.get(v.user) || undefined
+        if (rate === undefined) {
+          userStatsMap.set(v.user, { answers: 1, corrects: 1 })
+        } else {
+          userStatsMap.set(v.user, {
+            answers: rate.answers + 1,
+            corrects: rate.corrects + 1,
+          })
+        }
+      })
+      wrongUserList.forEach((v) => {
+        const rate = userStatsMap.get(v.user) || undefined
+        if (rate === undefined) {
+          userStatsMap.set(v.user, { answers: 0, corrects: 1 })
+        } else {
+          userStatsMap.set(v.user, {
+            answers: rate.answers,
+            corrects: rate.corrects + 1,
+          })
+        }
+      })
+    } else if (answer === '🇧') {
+      const correctUserList = voteList.filter((v) => v.index === 1)
+      const wrongUserList = voteList.filter((v) => v.index === 0)
+      correctUserList.forEach((v) => {
+        const rate = userStatsMap.get(v.user) || undefined
+        if (rate === undefined) {
+          userStatsMap.set(v.user, { answers: 1, corrects: 1 })
+        } else {
+          userStatsMap.set(v.user, {
+            answers: rate.answers + 1,
+            corrects: rate.corrects + 1,
+          })
+        }
+      })
+      wrongUserList.forEach((v) => {
+        const rate = userStatsMap.get(v.user) || undefined
+        if (rate === undefined) {
+          userStatsMap.set(v.user, { answers: 0, corrects: 1 })
+        } else {
+          userStatsMap.set(v.user, {
+            answers: rate.answers,
+            corrects: rate.corrects + 1,
+          })
+        }
+      })
+    }
     botState = 'NOT_QUESTION'
+    voteList.splice(0)
   }
 
   if (msg.content === '!q' && botState === 'NOT_QUESTION') {
