@@ -20,6 +20,9 @@ type Tweet = {
   image: string
 }
 
+const userStats: {user: string, correctRate: number}[] = []
+console.log(userStats)
+
 let tweetTuple: [Tweet, Tweet]
 
 const shuffleTuple = <T>(inputTuple: [T, T]): [T, T] => {
@@ -36,12 +39,52 @@ const shuffle = ([...array]) => {
 }
 
 const tweetList: Tweet[] = shuffle(tweets)
-// TODO: A, Bそれぞれに投票したユーザーをリストに入れる
-const votedUserList: any[] = []
-console.log(votedUserList)
+type Vote = {
+  url: string
+  user: string
+}
+const voteList: Vote[] = []
+
+client.on('messageReactionAdd', (reaction, user) => {
+  const index =
+    reaction.emoji.name === '🅰️'
+      ? 0
+      : reaction.emoji.name === '🇧'
+      ? 1
+      : undefined
+  if (index === undefined) return
+  const reactUser = user.username
+  if (reactUser === 'which-more-buzz' || reactUser === null) return
+  const vote = { url: tweetTuple[index].url, user: reactUser }
+  voteList.push(vote)
+})
+
+client.on('messageReactionRemove', (reaction, user) => {
+  const index =
+    reaction.emoji.name === '🅰️'
+      ? 0
+      : reaction.emoji.name === '🇧'
+      ? 1
+      : undefined
+  if (index === undefined) return
+  const reactUser = user.username
+  if (reactUser === 'which-more-buzz' || reactUser === null) return
+  const deleteIndex = voteList.findIndex(
+    (v) => v.user === reactUser && v.url === tweetTuple[index].url
+  )
+  voteList.splice(deleteIndex, 1)
+})
 
 client.on('message', async (msg) => {
   if (msg.content === '!a' && botState === 'QUESTIONING') {
+    const voteAUsers = voteList
+      .filter((v) => v.url === tweetTuple[0].url)
+      .map((v) => v.user)
+      .join(',')
+    const voteBUsers = voteList
+      .filter((v) => v.url === tweetTuple[1].url)
+      .map((v) => v.user)
+      .join(',')
     const embedA = new Discord.MessageEmbed()
       .setColor('#dd2e44')
       .setTitle(user.userName)
@@ -53,7 +96,7 @@ client.on('message', async (msg) => {
       )
       .setTimestamp(new Date(`${tweetTuple[0].date} ${tweetTuple[0].time}`))
       .setFooter('Twitter', user.iconUrl)
-      .setDescription(tweetTuple[0].url)
+      .setDescription(`選んだ人: ${voteAUsers}`)
     const embedB = new Discord.MessageEmbed()
       .setColor('#3b88c3')
       .setTitle(user.userName)
@@ -65,7 +108,7 @@ client.on('message', async (msg) => {
       )
       .setTimestamp(new Date(`${tweetTuple[1].date} ${tweetTuple[1].time}`))
       .setFooter('Twitter', user.iconUrl)
-      .setDescription(tweetTuple[1].url)
+      .setDescription(`選んだ人: ${voteBUsers}`)
     const answer = tweetTuple[0].likes > tweetTuple[1].likes ? '🅰️' : '🇧'
     msg.channel.send(embedA)
     msg.channel.send(embedB)
